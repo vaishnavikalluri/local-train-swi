@@ -1,0 +1,18 @@
+meta {
+  name: user-login
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/api/trains/6967d411592fe87a48887c2d
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "vaishnavik@gmail.com",
+    "password": "user@123"
+  }
+}

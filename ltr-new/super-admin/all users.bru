@@ -1,0 +1,15 @@
+meta {
+  name: all users
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/api/admin/station-managers/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJzdXBlci1hZG1pbi1pZCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc2ODQxMjA0OCwiZXhwIjoxNzY5MDE2ODQ4fQ.JlfWzj86xn04ROgDNj-Iu4qAyiujD2RtypsWGTSUuqw
+}

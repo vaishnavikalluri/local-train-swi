@@ -1,0 +1,44 @@
+meta {
+  name: add-train
+  type: http
+  seq: 2
+}
+
+get {
+  url: http:localhost:3000/api/trains
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTY3YzVkYzM1YTJhMDZiOTg4ZDYwMWIiLCJyb2xlIjoic3RhdGlvbl9tYW5hZ2VyIiwiaWF0IjoxNzY4NDEyMTI2LCJleHAiOjE3NjkwMTY5MjZ9.YcBMDUt3EWTznpHLrM18y8O_d1elRDTX10HduDhivVo
+}
+
+body:json {
+  // {
+  //   "trainNumber": "12951",
+  //   "trainName": "Dadar Rajdhani Express",
+  //   "platform": "5",
+  //   "arrivalTime": "16:35",
+  //   "departureTime": "16:55",
+  //   "delayMinutes": 20,
+  //   "status": "delayed",
+  //   "source": "dadar",
+  //   "destination": "New Delhi",
+  //   "stationName": "dadar"
+  // }
+  
+  
+  {
+    "trainNumber": "12009",
+    "trainName": "Shatabdi Express",
+    "platform": "3",
+    "arrivalTime": "06:25",
+    "departureTime": "06:30",
+    "delayMinutes": 0,
+    "status": "on_time",
+    "source": "dadar",
+    "destination": "Ahmedabad",
+    "stationName": "dadar"
+  }
+}

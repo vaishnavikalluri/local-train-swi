@@ -1,0 +1,24 @@
+meta {
+  name: super-admin
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/admin/station-managers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJzdXBlci1hZG1pbi1pZCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc2ODQyMTE4NSwiZXhwIjoxNzY5MDI1OTg1fQ.ncp0Bkgi9JKBn_2RQKGRlihD2laNmfToWmmvz_RvSFE
+}
+
+body:json {
+  {
+    "email": "manager.sec@gmail.com",
+    "password": "manager@789",
+    "name": "Amit Paaatel",
+    "stationName": "secunderabad"
+  }
+}
