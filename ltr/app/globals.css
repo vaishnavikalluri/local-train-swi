@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #111827;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
 }
 
 @theme inline {
@@ -30,15 +30,280 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #1e293b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #475569;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }
 
+/* Train Animation - Journey from start to end location */
+@keyframes train-journey {
+  0% {
+    left: 10%;
+    top: 12%;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+  25% {
+    left: 30%;
+    top: 28%;
+    transform: translate(-50%, -50%) rotate(15deg) scale(1.05);
+  }
+  50% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(25deg) scale(1.1);
+  }
+  75% {
+    left: 70%;
+    top: 72%;
+    transform: translate(-50%, -50%) rotate(35deg) scale(1.05);
+  }
+  95% {
+    left: 88%;
+    top: 86%;
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    left: 88%;
+    top: 86%;
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.train-route-journey {
+  position: absolute;
+  animation: train-journey 7s ease-in-out infinite;
+  z-index: 10;
+  will-change: transform, left, top, opacity;
+}
+
+/* Speed trail animation */
+@keyframes trail-fade {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.5);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.2);
+  }
+}
+
+.train-trail {
+  animation: trail-fade 0.6s ease-out infinite;
+}
+
+/* Bouncing location pins */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* Floating orbs */
+@keyframes float-orb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -15px) scale(1.1);
+  }
+  66% {
+    transform: translate(-15px, 20px) scale(0.9);
+  }
+}
+
+@keyframes float-orb-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-20px, 15px) scale(0.9);
+  }
+  66% {
+    transform: translate(15px, -20px) scale(1.1);
+  }
+}
+
+@keyframes float-orb-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10px, -10px) scale(1.05);
+  }
+}
+
+.float-orb {
+  animation: float-orb 8s ease-in-out infinite;
+}
+
+.float-orb-reverse {
+  animation: float-orb-reverse 10s ease-in-out infinite;
+}
+
+.float-orb-slow {
+  animation: float-orb-slow 12s ease-in-out infinite;
+}
+
+/* Cloud drift animations */
+@keyframes cloud-drift {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+@keyframes cloud-drift-reverse {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100vw);
+  }
+}
+
+@keyframes cloud-drift-slow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(80vw);
+  }
+}
+
+.cloud-drift {
+  animation: cloud-drift 30s linear infinite;
+}
+
+.cloud-drift-reverse {
+  animation: cloud-drift-reverse 40s linear infinite;
+}
+
+.cloud-drift-slow {
+  animation: cloud-drift-slow 50s linear infinite;
+}
+
+/* Dashed line animation */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+.animate-dash {
+  animation: dash 20s linear infinite;
+}
+
+/* Pulsing dot */
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    r: 1.5;
+    opacity: 0.4;
+  }
+  50% {
+    r: 2.5;
+    opacity: 1;
+  }
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .train-route-journey {
+    animation: none;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(25deg);
+    opacity: 1;
+  }
+  
+  .animate-bounce-slow,
+  .float-orb,
+  .float-orb-reverse,
+  .float-orb-slow,
+  .cloud-drift,
+  .cloud-drift-reverse,
+  .cloud-drift-slow,
+  .animate-dash,
+  .train-trail,
+  .pulse-dot {
+    animation: none;
+  }
+}
+
+/* Professional Button Styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold border-2 border-gray-300 hover:border-blue-500 hover:bg-gray-50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200;
+}
+
+.btn-danger {
+  @apply bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-red-700 hover:to-red-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300;
+}
+
+/* Input Styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="datetime-local"],
+select,
+textarea {
+  @apply border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Progress bar animation */
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}

@@ -37,6 +37,12 @@ export default function StationManagerTrainsPage() {
     delayMinutes: 0,
     arrivalTime: '',
     departureTime: '',
+    arrivalDate: '',
+    arrivalTimeOnly: '',
+    arrivalPeriod: 'AM',
+    departureDate: '',
+    departureTimeOnly: '',
+    departurePeriod: 'AM',
     source: '',
     destination: '',
   });
@@ -59,7 +65,25 @@ export default function StationManagerTrainsPage() {
       router.push('/login');
     }
   }, [router]);
+  const convertTo24Hour = (time: string, period: string) => {
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
 
+  const convertTo12Hour = (datetime: string) => {
+    const date = new Date(datetime);
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return {
+      date: datetime.split('T')[0],
+      time: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+      period
+    };
+  };
   const fetchTrains = async (station: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -82,13 +106,25 @@ export default function StationManagerTrainsPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
+      
+      // Convert 12-hour format to 24-hour datetime-local format
+      const arrivalTime24 = convertTo24Hour(formData.arrivalTimeOnly, formData.arrivalPeriod);
+      const departureTime24 = convertTo24Hour(formData.departureTimeOnly, formData.departurePeriod);
+      const arrivalDateTime = `${formData.arrivalDate}T${arrivalTime24}`;
+      const departureDateTime = `${formData.departureDate}T${departureTime24}`;
+      
       const res = await fetch('/api/trains', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ ...formData, stationName }),
+        body: JSON.stringify({ 
+          ...formData, 
+          stationName,
+          arrivalTime: arrivalDateTime,
+          departureTime: departureDateTime
+        }),
       });
 
       if (!res.ok) throw new Error('Failed to add train');
@@ -108,13 +144,24 @@ export default function StationManagerTrainsPage() {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // Convert 12-hour format to 24-hour datetime-local format
+      const arrivalTime24 = convertTo24Hour(formData.arrivalTimeOnly, formData.arrivalPeriod);
+      const departureTime24 = convertTo24Hour(formData.departureTimeOnly, formData.departurePeriod);
+      const arrivalDateTime = `${formData.arrivalDate}T${arrivalTime24}`;
+      const departureDateTime = `${formData.departureDate}T${departureTime24}`;
+      
       const res = await fetch(`/api/trains/${editingTrain._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          arrivalTime: arrivalDateTime,
+          departureTime: departureDateTime
+        }),
       });
 
       if (!res.ok) throw new Error('Failed to update train');
@@ -149,16 +196,24 @@ export default function StationManagerTrainsPage() {
 
   const startEdit = (train: Train) => {
     setEditingTrain(train);
+    const arrival = convertTo12Hour(train.arrivalTime);
+    const departure = convertTo12Hour(train.departureTime);
     setFormData({
-      trainNumber: train.trainNumber,
-      trainName: train.trainName,
-      platform: train.platform,
-      status: train.status,
-      delayMinutes: train.delayMinutes,
-      arrivalTime: new Date(train.arrivalTime).toISOString().slice(0, 16),
-      departureTime: new Date(train.departureTime).toISOString().slice(0, 16),
-      source: train.source,
-      destination: train.destination,
+      trainNumber: train.trainNumber || '',
+      trainName: train.trainName || '',
+      platform: train.platform || '',
+      status: train.status || 'on_time',
+      delayMinutes: train.delayMinutes || 0,
+      arrivalTime: train.arrivalTime || '',
+      departureTime: train.departureTime || '',
+      arrivalDate: arrival.date || '',
+      arrivalTimeOnly: arrival.time || '',
+      arrivalPeriod: arrival.period || 'AM',
+      departureDate: departure.date || '',
+      departureTimeOnly: departure.time || '',
+      departurePeriod: departure.period || 'AM',
+      source: train.source || '',
+      destination: train.destination || '',
     });
   };
 
@@ -171,6 +226,12 @@ export default function StationManagerTrainsPage() {
       delayMinutes: 0,
       arrivalTime: '',
       departureTime: '',
+      arrivalDate: '',
+      arrivalTimeOnly: '',
+      arrivalPeriod: 'AM',
+      departureDate: '',
+      departureTimeOnly: '',
+      departurePeriod: 'AM',
       source: '',
       destination: '',
     });
@@ -179,13 +240,13 @@ export default function StationManagerTrainsPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Manage Trains</h1>
-            <p className="text-gray-600">Station: {stationName}</p>
+            <h1 className="text-3xl font-bold text-white">Manage Trains</h1>
+            <p className="text-gray-300">Station: {stationName}</p>
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
@@ -197,14 +258,29 @@ export default function StationManagerTrainsPage() {
 
         {/* Add/Edit Form */}
         {(showAddForm || editingTrain) && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-white mb-4">
               {editingTrain ? 'Edit Train' : 'Add New Train'}
             </h2>
+            
+            {/* Station Info Section */}
+            <div className="mb-6 p-4 bg-blue-900/30 border-2 border-blue-500 rounded-lg backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🚉</span>
+                <div>
+                  <p className="text-sm font-semibold text-blue-300">Train Arriving At</p>
+                  <p className="text-lg font-bold text-blue-200">{stationName}</p>
+                  <p className="text-xs text-blue-300 mt-1">
+                    This train record is for your station. The train is arriving at or passing through your station.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <form onSubmit={editingTrain ? handleUpdateTrain : handleAddTrain} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Train Number
                   </label>
                   <input
@@ -212,11 +288,11 @@ export default function StationManagerTrainsPage() {
                     required
                     value={formData.trainNumber}
                     onChange={(e) => setFormData({ ...formData, trainNumber: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Train Name
                   </label>
                   <input
@@ -224,11 +300,11 @@ export default function StationManagerTrainsPage() {
                     required
                     value={formData.trainName}
                     onChange={(e) => setFormData({ ...formData, trainName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Platform
                   </label>
                   <input
@@ -236,11 +312,11 @@ export default function StationManagerTrainsPage() {
                     required
                     value={formData.platform}
                     onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Source Station
                   </label>
                   <input
@@ -248,11 +324,11 @@ export default function StationManagerTrainsPage() {
                     required
                     value={formData.source}
                     onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Destination Station
                   </label>
                   <input
@@ -260,39 +336,73 @@ export default function StationManagerTrainsPage() {
                     required
                     value={formData.destination}
                     onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Arrival Time
                   </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={formData.arrivalTime}
-                    onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="date"
+                      required
+                      value={formData.arrivalDate}
+                      onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    />
+                    <input
+                      type="time"
+                      required
+                      value={formData.arrivalTimeOnly}
+                      onChange={(e) => setFormData({ ...formData, arrivalTimeOnly: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    />
+                    <select
+                      value={formData.arrivalPeriod}
+                      onChange={(e) => setFormData({ ...formData, arrivalPeriod: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Departure Time
                   </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={formData.departureTime}
-                    onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="date"
+                      required
+                      value={formData.departureDate}
+                      onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    />
+                    <input
+                      type="time"
+                      required
+                      value={formData.departureTimeOnly}
+                      onChange={(e) => setFormData({ ...formData, departureTimeOnly: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    />
+                    <select
+                      value={formData.departurePeriod}
+                      onChange={(e) => setFormData({ ...formData, departurePeriod: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   >
                     <option value="on_time">On Time</option>
                     <option value="delayed">Delayed</option>
@@ -300,7 +410,7 @@ export default function StationManagerTrainsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Delay Minutes
                   </label>
                   <input
@@ -310,7 +420,7 @@ export default function StationManagerTrainsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, delayMinutes: parseInt(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
               </div>
@@ -328,7 +438,7 @@ export default function StationManagerTrainsPage() {
                       setEditingTrain(null);
                       resetForm();
                     }}
-                    className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors font-medium"
+                    className="bg-slate-700 text-gray-300 px-6 py-2 rounded-md hover:bg-slate-600 transition-colors font-medium"
                   >
                     Cancel
                   </button>
@@ -340,52 +450,52 @@ export default function StationManagerTrainsPage() {
 
         {/* Trains List */}
         {trains.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500 text-lg">No trains found for this station</p>
+          <div className="text-center py-12 bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700">
+            <p className="text-gray-400 text-lg">No trains found for this station</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-700">
+              <thead className="bg-slate-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Train
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Route
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Platform
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Arrival
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Departure
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/30 divide-y divide-slate-700">
                 {trains.map((train) => (
                   <tr key={train._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{train.trainName}</div>
-                      <div className="text-sm text-gray-500">#{train.trainNumber}</div>
+                      <div className="text-sm font-medium text-white">{train.trainName}</div>
+                      <div className="text-sm text-gray-400">#{train.trainNumber}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{train.source}</div>
-                      <div className="text-sm text-gray-500">→ {train.destination}</div>
+                      <div className="text-sm text-white">{train.source}</div>
+                      <div className="text-sm text-gray-400">→ {train.destination}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {train.platform}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {new Date(train.arrivalTime).toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -393,7 +503,7 @@ export default function StationManagerTrainsPage() {
                         minute: '2-digit',
                       })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {new Date(train.departureTime).toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',

@@ -108,14 +108,18 @@ export default function FavoritesPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">My Saved Trains</h1>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white mb-2">My Saved Trains</h1>
+          <p className="text-gray-400">Quick access to your favorite trains</p>
+        </div>
 
         {favorites.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500 text-lg mb-2">No saved trains yet</p>
+          <div className="text-center py-12 bg-slate-800/50 backdrop-blur rounded-xl border border-slate-700">
+            <div className="text-5xl mb-4">⭐</div>
+            <p className="text-gray-300 text-lg mb-2">No saved trains yet</p>
             <p className="text-gray-400 text-sm">
               Go to the dashboard and save trains to see them here
             </p>
