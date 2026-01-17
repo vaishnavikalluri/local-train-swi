@@ -24,6 +24,7 @@ export default function AdminStationManagersPage() {
     email: '',
     stationName: '',
   });
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -75,6 +76,8 @@ export default function AdminStationManagersPage() {
       await fetchManagers();
       setEditingManager(null);
       resetForm();
+      setSuccessMessage('Station Manager updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 2000);
     } catch (error) {
       console.error('Error updating manager:', error);
       alert('Failed to update manager');
@@ -94,6 +97,8 @@ export default function AdminStationManagersPage() {
       if (!res.ok) throw new Error('Failed to delete manager');
 
       await fetchManagers();
+      setSuccessMessage('Station Manager deleted successfully!');
+      setTimeout(() => setSuccessMessage(''), 2000);
     } catch (error) {
       console.error('Error deleting manager:', error);
       alert('Failed to delete manager');
@@ -120,11 +125,11 @@ export default function AdminStationManagersPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Station Managers</h1>
+          <h1 className="text-3xl font-bold text-white">Station Managers</h1>
           <Link
             href="/admin/create-station-manager"
             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium"
@@ -133,34 +138,41 @@ export default function AdminStationManagersPage() {
           </Link>
         </div>
 
+        {successMessage && (
+          <div className="bg-white text-green-700 p-3 rounded-md mb-4 text-sm border border-green-500 relative overflow-hidden">
+            {successMessage}
+            <div className="absolute bottom-0 left-0 h-1 bg-green-500 animate-[shrink_2s_linear_forwards]" style={{ width: '100%' }}></div>
+          </div>
+        )}
+
         {/* Edit Form */}
         {editingManager && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Station Manager</h2>
+          <div className="bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Edit Station Manager</h2>
             <form onSubmit={handleUpdateManager} className="space-y-4">
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Station Name
                   </label>
                   <input
@@ -168,7 +180,7 @@ export default function AdminStationManagersPage() {
                     required
                     value={formData.stationName}
                     onChange={(e) => setFormData({ ...formData, stationName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white"
                   />
                 </div>
               </div>
@@ -185,7 +197,7 @@ export default function AdminStationManagersPage() {
                     setEditingManager(null);
                     resetForm();
                   }}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors font-medium"
+                  className="bg-slate-700 text-gray-300 px-6 py-2 rounded-md hover:bg-slate-600 transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -196,44 +208,44 @@ export default function AdminStationManagersPage() {
 
         {/* Managers List */}
         {managers.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500 text-lg">No station managers found</p>
+          <div className="text-center py-12 bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700">
+            <p className="text-gray-400 text-lg">No station managers found</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-700">
+              <thead className="bg-slate-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Station
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/30 divide-y divide-slate-700">
                 {managers.map((manager) => (
                   <tr key={manager._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                       {manager.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {manager.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {manager.stationName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {new Date(manager.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
+import EmergencyButton from '../components/EmergencyButton';
 import TrainCard from '../components/TrainCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -15,6 +16,10 @@ interface Train {
   status: string;
   delayMinutes: number;
   scheduledTime: string;
+  arrivalTime?: string;
+  departureTime?: string;
+  source?: string;
+  destination?: string;
   isFavorite: boolean;
 }
 
@@ -28,6 +33,7 @@ export default function DashboardPage() {
   const [rerouteData, setRerouteData] = useState<Record<string, any>>({});
   const [userName, setUserName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showEmergencyConfirmation, setShowEmergencyConfirmation] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,22 +49,33 @@ export default function DashboardPage() {
 
     setUserName(name || 'User');
     fetchTrains();
+    
+    // Check if emergency was just submitted
+    const emergencySubmitted = localStorage.getItem('emergencySubmitted');
+    if (emergencySubmitted === 'true') {
+      setShowEmergencyConfirmation(true);
+      localStorage.removeItem('emergencySubmitted');
+      // Auto-hide after 8 seconds
+      setTimeout(() => setShowEmergencyConfirmation(false), 8000);
+    }
   }, [router]);
 
   const fetchTrains = async () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch trains and favorites in parallel
-      const [trainsRes, favoritesRes] = await Promise.all([
+      // Fetch trains, favorites, and all stations in parallel
+      const [trainsRes, favoritesRes, stationsRes] = await Promise.all([
         fetch('/api/trains', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/users/favorites', { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/api/users/favorites', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/stations')
       ]);
 
       if (!trainsRes.ok) throw new Error('Failed to fetch trains');
 
       const trainsData = await trainsRes.json();
       const favoritesData = favoritesRes.ok ? await favoritesRes.json() : { favorites: [] };
+      const stationsData = stationsRes.ok ? await stationsRes.json() : { stations: [] };
 
       // Create a set of favorite train IDs for quick lookup
       const favoriteIds = new Set(
@@ -74,11 +91,8 @@ export default function DashboardPage() {
       setTrains(trainsWithFavorites);
       setFilteredTrains(trainsWithFavorites);
 
-      // Extract unique stations
-      const uniqueStations = Array.from(
-        new Set(trainsWithFavorites.map((t: Train) => t.stationName))
-      );
-      setStations(uniqueStations as string[]);
+      // Use stations from the stations API endpoint
+      setStations(stationsData.stations || []);
 
       // Fetch reroute data for delayed/cancelled trains
       fetchRerouteData(trainsWithFavorites);
@@ -92,7 +106,7 @@ export default function DashboardPage() {
   const fetchRerouteData = async (trainList: Train[]) => {
     const token = localStorage.getItem('token');
     const delayedTrains = trainList.filter(
-      (t) => t.status === 'cancelled' || t.delayMinutes > 15
+      (t) => t.status === 'cancelled' || t.delayMinutes > 0
     );
 
     const reroutePromises = delayedTrains.map(async (train) => {
@@ -190,64 +204,6 @@ export default function DashboardPage() {
         prev.map((t) => (t._id === trainId ? { ...t, isFavorite } : t))
       );
 
-        {/* Search and Filter Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search by train name, number, or station..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Station Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Filter by Station:
-              </label>
-              <select
-                value={selectedStation}
-                onChange={(e) => handleStationFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Stations</option>
-                {stations.map((station) => (
-                  <option key={station} value={station}>
-                    {station}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Results Count */}
-          {(searchQuery || selectedStation !== 'all') && (
-            <div className="mt-3 text-sm text-gray-600">
-              Showing {filteredTrains.length} of {trains.length} trains
-              {searchQuery && ` matching "${searchQuery}"`}
-            </div>
-          )}
-        </div>
-
       setFilteredTrains((prev) =>
         prev.map((t) => (t._id === trainId ? { ...t, isFavorite } : t))
       );
@@ -262,80 +218,96 @@ export default function DashboardPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome, {userName}!
-          </h1>
-          <p className="text-gray-600">Track your trains and get real-time updates</p>
+        {/* Emergency Confirmation Banner */}
+        {showEmergencyConfirmation && (
+          <div className="mb-6 bg-green-500/10 border border-green-500/50 text-green-400 p-4 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">✅</span>
+              <div>
+                <p className="font-semibold">Emergency Alert Sent Successfully!</p>
+                <p className="text-sm text-green-300">Station staff have been notified and will assist you shortly.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Welcome, {userName}!
+            </h1>
+            <p className="text-gray-400">Track your trains and get real-time updates</p>
+          </div>
+          <EmergencyButton variant="inline" />
         </div>
 
         {/* Search and Filter Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search by train name, number, or station..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Station Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Filter by Station:
-              </label>
-              <select
-                value={selectedStation}
-                onChange={(e) => handleStationFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          {/* Search Bar */}
+          <div className="flex-1">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search by train name, number, or station..."
+                className="w-full pl-4 pr-12 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-0 text-white placeholder-gray-400"
+              />
+              <svg
+                className="absolute right-6 top-3 h-5 w-5 text-gray-400 pointer-events-none"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <option value="all">All Stations</option>
-                {stations.map((station) => (
-                  <option key={station} value={station}>
-                    {station}
-                  </option>
-                ))}
-              </select>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
             </div>
           </div>
 
-          {/* Results Count */}
-          {(searchQuery || selectedStation !== 'all') && (
-            <div className="mt-3 text-sm text-gray-600">
-              Showing {filteredTrains.length} of {trains.length} trains
-              {searchQuery && ` matching "${searchQuery}"`}
-            </div>
-          )}
+          {/* Station Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300 whitespace-nowrap">
+              Filter by Station:
+            </label>
+            <select
+              value={selectedStation}
+              onChange={(e) => handleStationFilter(e.target.value)}
+              className="px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-0 text-white"
+            >
+              <option value="all">All Stations</option>
+              {stations.map((station) => (
+                <option key={station} value={station}>
+                  {station}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Train Dashboard</h2>
+        {/* Results Count */}
+        {(searchQuery || selectedStation !== 'all') && (
+          <div className="mb-6 text-sm text-gray-400">
+            Showing {filteredTrains.length} of {trains.length} trains
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
+
+        <h2 className="text-2xl font-semibold text-white mb-6">Train Dashboard</h2>
 
         {filteredTrains.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500 text-lg">
-              {searchQuery || selectedStation !== 'all'
+          <div className="text-center py-12 bg-slate-800/50 backdrop-blur rounded-xl border border-slate-700">
+            <p className="text-gray-400 text-lg">
+              {selectedStation !== 'all'
+                ? `No trains available from ${selectedStation} station`
+                : searchQuery
                 ? 'No trains found matching your search'
                 : 'No trains found'}
             </p>
@@ -346,7 +318,7 @@ export default function DashboardPage() {
                   setSelectedStation('all');
                   setFilteredTrains(trains);
                 }}
-                className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                className="mt-4 text-blue-400 hover:text-blue-300 font-medium"
               >
                 Clear filters
               </button>
