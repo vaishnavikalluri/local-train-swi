@@ -191,9 +191,6 @@ export default function EmergencyAlertsPage() {
           <p className="text-gray-300">
             Station: <span className="font-semibold">{stationName}</span>
           </p>
-          <p className="text-sm text-gray-400 mt-1">
-            Showing alerts where your station is boarding or destination point
-          </p>
         </div>
 
         {/* Stats Cards */}

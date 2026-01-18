@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '@/lib/auth';
+import { SUPER_ADMIN } from '@/lib/superAdmin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,24 +19,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Hardcoded Super Admin check
-    if (email === 'goldikalluri@gmail.com' && password === 'goldi123') {
+    if (email === SUPER_ADMIN.email && password === SUPER_ADMIN.password) {
       // Validate role if provided
-      if (role && role !== 'super_admin') {
+      if (role && role !== SUPER_ADMIN.role) {
         return NextResponse.json(
           { error: 'Invalid role for this account' },
           { status: 403 }
         );
       }
-      const token = generateToken('super-admin-id', 'super_admin');
+      const token = generateToken(SUPER_ADMIN.id, SUPER_ADMIN.role);
       return NextResponse.json({
         message: 'Login successful',
         token,
-        role: 'super_admin',
+        role: SUPER_ADMIN.role,
         user: {
-          id: 'super-admin-id',
-          name: 'Super Administrator',
-          email: 'goldikalluri@gmail.com',
-          role: 'super_admin',
+          id: SUPER_ADMIN.id,
+          name: SUPER_ADMIN.name,
+          email: SUPER_ADMIN.email,
+          role: SUPER_ADMIN.role,
         },
       });
     }

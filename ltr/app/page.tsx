@@ -92,51 +92,154 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <section className="bg-slate-800/20 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-5xl font-bold text-center text-white mb-16">
           Why Choose LTR?
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-slate-800/50 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-            <div className="text-5xl mb-4">⏱️</div>
-            <h3 className="text-xl font-bold text-white mb-3">Real-Time Updates</h3>
-            <p className="text-gray-400 leading-relaxed">
-              Get instant notifications about train delays, cancellations, and platform changes.
-            </p>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Box 1 */}
+          <div className="bg-blue-600/10 border border-blue-500/30 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+              <span>⏱️</span> Real-Time Tracking
+            </h3>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Live Updates:</strong> Get instant notifications about train delays, cancellations, and platform changes</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Live Monitoring:</strong> Continuous tracking of all trains with real-time status updates</span>
+              </li>
+            </ul>
           </div>
-          <div className="bg-slate-800/50 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-            <div className="text-5xl mb-4">🔄</div>
-            <h3 className="text-xl font-bold text-white mb-3">Smart Rerouting</h3>
-            <p className="text-gray-400 leading-relaxed">
-              Automatic alternative train suggestions when delays exceed 15 minutes.
-            </p>
+
+          {/* Box 2 */}
+          <div className="bg-blue-600/10 border border-blue-500/30 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+              <span>🔄</span> Smart Rerouting
+            </h3>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Automatic Suggestions:</strong> Alternative train routes when delays exceed 15 minutes</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Intelligent Algorithm:</strong> Reroute calculation based on station connectivity and train availability</span>
+              </li>
+            </ul>
           </div>
-          <div className="bg-slate-800/50 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-            <div className="text-5xl mb-4">⭐</div>
-            <h3 className="text-xl font-bold text-white mb-3">Favorite Trains</h3>
-            <p className="text-gray-400 leading-relaxed">
-              Save your frequent trains for quick access and track their status easily.
-            </p>
+
+          {/* Box 3 */}
+          <div className="bg-blue-600/10 border border-blue-500/30 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+              <span>⭐</span> Personalization & Alerts
+            </h3>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Favorite Trains:</strong> Save frequent trains for quick access and priority notifications</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Emergency Response:</strong> One-tap to open form, fill in emergency details, and station managers are instantly notified with action taken ASAP</span>
+              </li>
+            </ul>
           </div>
-          <div className="bg-slate-800/50 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-            <div className="text-5xl mb-4">🚨</div>
-            <h3 className="text-xl font-bold text-white mb-3">Emergency Alerts</h3>
-            <p className="text-gray-400 leading-relaxed">
-              Report emergencies instantly with detailed location and train information.
-            </p>
+
+          {/* Box 4 */}
+          <div className="bg-blue-600/10 border border-blue-500/30 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+              <span>📊</span> Management System
+            </h3>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Dashboard:</strong> Station managers can update multiple trains and handle alerts efficiently</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 mt-1">→</span>
+                <span><strong>Delay Detection:</strong> Re-routes are suggested to passengers when trains are delayed 15+ minutes</span>
+              </li>
+            </ul>
           </div>
-          <div className="bg-slate-800/50 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-            <div className="text-5xl mb-4">📊</div>
-            <h3 className="text-xl font-bold text-white mb-3">Management Dashboard</h3>
-            <p className="text-gray-400 leading-relaxed">
-              Station managers can update train status and manage schedules efficiently.
-            </p>
+        </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-5xl font-bold text-center text-white mb-16">
+          How It Works
+        </h2>
+      
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Step 1 */}
+          <div className="relative">
+            <div className="bg-slate-800/70 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                1
+              </div>
+              <div className="text-5xl mb-4 mt-2">📡</div>
+              <h3 className="text-xl font-bold text-white mb-3">Live Tracking</h3>
+              <p className="text-gray-400 leading-relaxed">
+                Station managers update train status in real-time. Our system monitors delays, cancellations, and schedule changes instantly.
+              </p>
+            </div>
           </div>
+
+          {/* Step 2 */}
+          <div className="relative">
+            <div className="bg-slate-800/70 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                2
+              </div>
+              <div className="text-5xl mb-4 mt-2">⚠️</div>
+              <h3 className="text-xl font-bold text-white mb-3">Delay Detection</h3>
+              <p className="text-gray-400 leading-relaxed">
+                When a train is delayed by 15+ minutes, our system automatically identifies affected passengers and their destinations.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="relative">
+            <div className="bg-slate-800/70 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                3
+              </div>
+              <div className="text-5xl mb-4 mt-2">🔄</div>
+              <h3 className="text-xl font-bold text-white mb-3">Smart Rerouting</h3>
+              <p className="text-gray-400 leading-relaxed">
+                Our algorithm calculates alternative routes considering station connectivity and provides the best reroute options instantly.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="relative">
+            <div className="bg-slate-800/70 backdrop-blur p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition-all h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                4
+              </div>
+              <div className="text-5xl mb-4 mt-2">📲</div>
+              <h3 className="text-xl font-bold text-white mb-3">Instant Notifications</h3>
+              <p className="text-gray-400 leading-relaxed">
+                Passengers receive real-time alerts with alternative train suggestions, schedules, and platform information automatically.
+              </p>
+            </div>
+          </div>
+        </div>
         </div>
       </section>
 
       {/* Who Can Use Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <section className="bg-slate-800/20 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-5xl font-bold text-center text-white mb-16">
           Built For Everyone
         </h2>
@@ -163,10 +266,11 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-950 border-t border-slate-800 py-16 mt-24">
+      <footer className="bg-slate-950 border-t border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-12 mb-8">
             <div>
