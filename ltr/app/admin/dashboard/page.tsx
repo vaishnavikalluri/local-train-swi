@@ -31,6 +31,7 @@ export default function AdminDashboardPage() {
   const [trains, setTrains] = useState<Train[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTrains, setShowTrains] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -100,6 +101,19 @@ export default function AdminDashboardPage() {
     });
   };
 
+  // Filter trains based on search query
+  const filteredTrains = trains.filter((train) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      train.trainName.toLowerCase().includes(query) ||
+      train.trainNumber.toLowerCase().includes(query) ||
+      train.stationName.toLowerCase().includes(query) ||
+      train.source.toLowerCase().includes(query) ||
+      train.destination.toLowerCase().includes(query) ||
+      train.createdByName?.toLowerCase().includes(query)
+    );
+  });
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -158,11 +172,26 @@ export default function AdminDashboardPage() {
         {/* All Trains Section */}
         {showTrains && (
           <div className="bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700 p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">All Trains Across Network</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">All Trains Across Network</h2>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search trains..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-slate-700/50 text-white border border-slate-600 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                />
+              </div>
+            </div>
             
-            {trains.length === 0 ? (
+            {filteredTrains.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-400">No trains in the system</p>
+                <p className="text-gray-400">
+                  {searchQuery ? 'No trains match your search' : 'No trains in the system'}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -180,7 +209,7 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">
-                    {trains.map((train) => (
+                    {filteredTrains.map((train) => (
                       <tr key={train._id} className="hover:bg-slate-700/30 transition-colors">
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-white">{train.trainName}</div>

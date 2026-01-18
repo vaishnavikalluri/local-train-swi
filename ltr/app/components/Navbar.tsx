@@ -157,6 +157,12 @@ export default function Navbar() {
                     >
                       Manage Trains
                     </Link>
+                    <Link
+                      href="/station-manager/emergency-alerts"
+                      className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Emergency Alerts
+                    </Link>
                   </>
                 )}
                 {user.role === 'super_admin' && (
@@ -196,9 +202,15 @@ export default function Navbar() {
                     </span>
                   </button>
 
-                  {/* Dropdown Menu - Only Email */}
+                  {/* Dropdown Menu - Role and Email */}
                   {showProfileMenu && (
                     <div className="absolute right-0 mt-2 w-80 bg-slate-800 rounded-lg shadow-xl border border-slate-700 overflow-hidden z-50">
+                      <div className="px-4 py-3 border-b border-slate-700">
+                        <p className="text-xs text-gray-400 mb-1">Role</p>
+                        <p className="text-sm text-white font-medium capitalize">
+                          {user.role === 'super_admin' ? 'Super Admin' : user.role.replace('_', ' ')}
+                        </p>
+                      </div>
                       <div className="px-4 py-3">
                         <p className="text-xs text-gray-400 mb-1">Email Address</p>
                         <p className="text-sm text-white font-medium break-words">{user.email}</p>

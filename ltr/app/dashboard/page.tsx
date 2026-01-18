@@ -300,7 +300,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <h2 className="text-2xl font-semibold text-white mb-6">Train Dashboard</h2>
+        <h2 className="text-2xl font-semibold text-white mb-6">Here are the train details</h2>
 
         {filteredTrains.length === 0 ? (
           <div className="text-center py-12 bg-slate-800/50 backdrop-blur rounded-xl border border-slate-700">
