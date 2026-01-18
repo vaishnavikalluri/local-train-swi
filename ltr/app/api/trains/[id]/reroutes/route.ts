@@ -39,10 +39,30 @@ export async function GET(
       );
     }
 
-    // Check if reroute is needed
+    // Check if reroute is needed - only for delays >= 15 minutes or cancelled
     const isCancelled = train.status === 'cancelled';
-    const isDelayed = train.delayMinutes > 15;
-    const rerouteRequired = isCancelled || isDelayed;
+    const isSignificantDelay = train.delayMinutes >= 15;
+    
+    // Check if train already departed (including delay and date)
+    const now = new Date();
+    
+    // Parse departure time - handle both "HH:MM" and ISO datetime strings
+    let scheduledDeparture: Date;
+    if (/^\d{2}:\d{2}$/.test(train.departureTime)) {
+      // Time only format - assume today
+      const [depHours, depMins] = train.departureTime.split(':').map(Number);
+      scheduledDeparture = new Date();
+      scheduledDeparture.setHours(depHours, depMins, 0, 0);
+    } else {
+      // ISO datetime format
+      scheduledDeparture = new Date(train.departureTime);
+    }
+    
+    // Add delay to scheduled departure time to get actual departure time
+    const actualDeparture = new Date(scheduledDeparture.getTime() + train.delayMinutes * 60000);
+    
+    const trainAlreadyDeparted = now > actualDeparture;
+    const rerouteRequired = (isCancelled || isSignificantDelay) && !trainAlreadyDeparted;
 
     if (!rerouteRequired) {
       const explanation = generateNoRerouteExplanation({
@@ -56,7 +76,7 @@ export async function GET(
 
       return NextResponse.json({
         rerouteRequired: false,
-        message: explanation.mainMessage,
+        message: trainAlreadyDeparted ? 'Train has already departed' : explanation.mainMessage,
         explanation,
         train: {
           trainNumber: train.trainNumber,
@@ -72,35 +92,119 @@ export async function GET(
       ? 'Train has been cancelled'
       : `Train delayed by ${train.delayMinutes} minutes`;
 
-    // Find alternative trains from the same station
-    const alternativeTrains = await Train.find({
+    // Calculate current time for checking if alternative trains have departed
+    const currentTimeStr = now.toISOString();
+
+    console.log('=== Reroute Search Debug ===');
+    console.log('Current train:', train.trainNumber, train.trainName);
+    console.log('From:', train.stationName, '-> To:', train.destination);
+    console.log('Current datetime:', now.toISOString());
+    console.log('Train scheduled departure:', train.departureTime);
+    console.log('Train delay:', train.delayMinutes, 'mins');
+    console.log('Actual departure:', actualDeparture.toISOString());
+
+    // DEBUG: Check what station names exist in the database
+    const allTrains = await Train.find({}).select('trainName stationName destination');
+    console.log('All trains in database:', allTrains.map(t => ({
+      name: t.trainName,
+      station: t.stationName,
+      dest: t.destination
+    })));
+
+    // Find alternative trains from the same station (fetch all, filter in code)
+    const sameStationCandidates = await Train.find({
       stationName: train.stationName,
       _id: { $ne: train._id }, // Exclude the current train
+      destination: train.destination, // Same destination
+      status: { $ne: 'cancelled' }, // Exclude cancelled trains
     })
-      .select('trainNumber trainName platform arrivalTime departureTime status delayMinutes source destination stationName')
-      .sort({
-        status: 1, // on_time comes before delayed/cancelled
-        delayMinutes: 1, // then by least delay
-      })
-      .limit(3);
+      .select('trainNumber trainName platform arrivalTime departureTime status delayMinutes source destination stationName');
 
-    // Get nearby stations
-    const nearbyStations = getNearbyStations(train.stationName);
-    
+    // Filter by departure time and delay in JavaScript
+    console.log('Same station candidates found:', sameStationCandidates.length);
+    const alternativeTrains = sameStationCandidates
+      .filter(alt => {
+        // Parse departure time and add delay to get actual departure
+        let altScheduledDeparture: Date;
+        if (/^\d{2}:\d{2}$/.test(alt.departureTime)) {
+          const [hours, mins] = alt.departureTime.split(':').map(Number);
+          altScheduledDeparture = new Date();
+          altScheduledDeparture.setHours(hours, mins, 0, 0);
+        } else {
+          altScheduledDeparture = new Date(alt.departureTime);
+        }
+        const altActualDeparture = new Date(altScheduledDeparture.getTime() + alt.delayMinutes * 60000);
+        
+        console.log(`Checking ${alt.trainName}: scheduled=${alt.departureTime}, delay=${alt.delayMinutes}m, actual=${altActualDeparture.toISOString()}, now=${now.toISOString()}, hasNotDeparted=${altActualDeparture > now}`);
+        
+        // Check if alternative hasn't departed yet (including its delay) and has acceptable delay
+        const hasNotDeparted = altActualDeparture > now;
+        const hasAcceptableDelay = alt.status === 'on_time' || alt.delayMinutes < 15;
+        
+        // Check if alternative departs before or soon after the delayed original train (within 30 min)
+        const departsBefore = altActualDeparture.getTime() < actualDeparture.getTime() + (30 * 60000);
+        
+        return hasNotDeparted && hasAcceptableDelay && departsBefore;
+      })
+      .sort((a, b) => {
+        // Sort by departure time
+        return new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime();
+      })
+      .slice(0, 3);
+
+    console.log('Same station alternatives found:', alternativeTrains.length);
+
+    // Automatically discover nearby stations by finding all trains with same destination at different stations
     let nearbyStationTrains: any[] = [];
     
-    // If no alternatives at current station, fetch from nearby stations
-    if (alternativeTrains.length === 0 && nearbyStations.length > 0) {
-      nearbyStationTrains = await Train.find({
-        stationName: { $in: nearbyStations },
+    const otherStationCandidates = await Train.find({
+      stationName: { $ne: train.stationName }, // Different station
+      destination: train.destination, // Same destination
+      _id: { $ne: train._id }, // Exclude current train
+      status: { $ne: 'cancelled' }, // Exclude cancelled trains
+    })
+      .select('trainNumber trainName platform arrivalTime departureTime status delayMinutes source destination stationName');
+    
+    console.log('Other station candidates found:', otherStationCandidates.length);
+    
+    // Filter by departure time and delay in JavaScript
+    nearbyStationTrains = otherStationCandidates
+      .filter(alt => {
+        // Parse departure time and add delay to get actual departure
+        let altScheduledDeparture: Date;
+        if (/^\d{2}:\d{2}$/.test(alt.departureTime)) {
+          const [hours, mins] = alt.departureTime.split(':').map(Number);
+          altScheduledDeparture = new Date();
+          altScheduledDeparture.setHours(hours, mins, 0, 0);
+        } else {
+          altScheduledDeparture = new Date(alt.departureTime);
+        }
+        const altActualDeparture = new Date(altScheduledDeparture.getTime() + alt.delayMinutes * 60000);
+        
+        console.log(`${alt.trainName} at ${alt.stationName}: scheduled=${alt.departureTime}, delay=${alt.delayMinutes}m, actual=${altActualDeparture.toISOString()}, now=${now.toISOString()}, hasNotDeparted=${altActualDeparture > now}`);
+        
+        // Check if alternative hasn't departed yet (including its delay) and has acceptable delay
+        const hasNotDeparted = altActualDeparture > now;
+        const hasAcceptableDelay = alt.status === 'on_time' || alt.delayMinutes < 15;
+        
+        // Check if alternative departs before or soon after the delayed original train (within 45 min for nearby stations)
+        const departsBefore = altActualDeparture.getTime() < actualDeparture.getTime() + (45 * 60000);
+        
+        return hasNotDeparted && hasAcceptableDelay && departsBefore;
       })
-        .select('trainNumber trainName platform arrivalTime departureTime status delayMinutes source destination stationName')
-        .sort({
-          status: 1,
-          delayMinutes: 1,
-        })
-        .limit(5);
+      .sort((a, b) => {
+        // Sort by departure time
+        return new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime();
+      })
+      .slice(0, 5);
+    
+    console.log('Nearby station alternatives found:', nearbyStationTrains.length);
+    if (nearbyStationTrains.length > 0) {
+      console.log('Alternative stations:', [...new Set(nearbyStationTrains.map(t => t.stationName))]);
     }
+
+    // Get list of discovered nearby station names
+    const discoveredNearbyStations = [...new Set(nearbyStationTrains.map(t => t.stationName))];
 
     // Format alternative trains from same station
     const formattedAlternatives = alternativeTrains.map((alt) => {
@@ -198,7 +302,7 @@ export async function GET(
     } else if (formattedAlternatives.length === 0 && formattedNearbyTrains.length > 0) {
       overallExplanation = generateNoSameStationAlternativesExplanation(
         train.stationName,
-        nearbyStations
+        discoveredNearbyStations
       );
     } else {
       overallExplanation = {
@@ -223,7 +327,7 @@ export async function GET(
       sameStationCount: formattedAlternatives.length,
       nearbyStationAlternatives: formattedNearbyTrains,
       nearbyStationCount: formattedNearbyTrains.length,
-      suggestedStations: nearbyStations,
+      suggestedStations: discoveredNearbyStations,
       message:
         formattedAlternatives.length > 0
           ? `Found ${formattedAlternatives.length} alternative train(s) at ${train.stationName}`
