@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Train from '@/models/Train';
+import User from '@/models/User';
 import { authenticateUser } from '@/lib/middleware';
 
 // Get all trains (Public - Users can view)
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     const trains = await Train.find(query)
       .populate('createdBy', 'name email')
-      .sort({ arrivalTime: 1 });
+      .sort({ departureTime: 1 });
 
     // Transform to include creator name
     const trainsWithCreator = trains.map(train => {
@@ -34,6 +35,8 @@ export async function GET(request: NextRequest) {
         createdByName: trainObj.createdBy ? (trainObj.createdBy as any).name : 'Unknown'
       };
     });
+
+    console.log(`Found ${trainsWithCreator.length} trains for station: ${stationName || 'all'}`);
 
     return NextResponse.json({
       success: true,

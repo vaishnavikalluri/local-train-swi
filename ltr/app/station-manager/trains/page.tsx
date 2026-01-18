@@ -87,16 +87,24 @@ export default function StationManagerTrainsPage() {
   const fetchTrains = async (station: string) => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Fetching trains for station:', station);
+      
       const res = await fetch(`/api/trains?stationName=${encodeURIComponent(station)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error('Failed to fetch trains');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Fetch trains failed:', res.status, errorData);
+        throw new Error(errorData.error || 'Failed to fetch trains');
+      }
 
       const data = await res.json();
-      setTrains(data.trains);
+      console.log('Trains data received:', data);
+      setTrains(data.trains || []);
     } catch (error) {
       console.error('Error fetching trains:', error);
+      setTrains([]);
     } finally {
       setLoading(false);
     }
@@ -237,6 +245,41 @@ export default function StationManagerTrainsPage() {
     });
   };
 
+  // Helper function to format time display
+  const formatTimeDisplay = (timeString: string) => {
+    if (!timeString) return 'N/A';
+    
+    // If it's in HH:MM format
+    if (/^\d{2}:\d{2}$/.test(timeString)) {
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    
+    // If it's an ISO datetime string
+    try {
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        const dateStr = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+        const timeStr = date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        return `${dateStr}  ${timeStr}`;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    
+    return timeString;
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -268,10 +311,10 @@ export default function StationManagerTrainsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🚉</span>
                 <div>
-                  <p className="text-sm font-semibold text-blue-300">Train Arriving At</p>
+                  <p className="text-sm font-semibold text-blue-300">Managing Station</p>
                   <p className="text-lg font-bold text-blue-200">{stationName}</p>
                   <p className="text-xs text-blue-300 mt-1">
-                    This train record is for your station. The train is arriving at or passing through your station.
+                    Enter departure time from source and arrival time at destination for the complete journey.
                   </p>
                 </div>
               </div>
@@ -341,7 +384,7 @@ export default function StationManagerTrainsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Arrival Time
+                    Arrival Time <span className="text-xs text-blue-400">(at Destination)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <input
@@ -370,7 +413,7 @@ export default function StationManagerTrainsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Departure Time
+                    Departure Time <span className="text-xs text-emerald-400">(from Source)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <input
@@ -468,10 +511,10 @@ export default function StationManagerTrainsPage() {
                     Platform
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Arrival
+                    Departure
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Departure
+                    Arrival
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Status
@@ -496,20 +539,10 @@ export default function StationManagerTrainsPage() {
                       {train.platform}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {new Date(train.arrivalTime).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatTimeDisplay(train.departureTime)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {new Date(train.departureTime).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatTimeDisplay(train.arrivalTime)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={train.status} delayMinutes={train.delayMinutes} />

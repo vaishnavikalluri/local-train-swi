@@ -483,14 +483,4 @@ This project is created for educational purposes to demonstrate solving real-wor
 **For Railway Officials:**
 Interested in implementing LTR at your station? Contact us for a demo and partnership opportunities.
 
----
 
-<div align="center">
-
-**🚂 Making Every Journey Count 🚂**
-
-*LTR - Because millions shouldn't wait in uncertainty*
-
-**Built with ❤️ for Indian Railway Passengers**
-
-</div>
