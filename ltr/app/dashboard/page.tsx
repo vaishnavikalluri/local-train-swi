@@ -291,15 +291,12 @@ export default function DashboardPage() {
             {/* Search Bar */}
             <div className="flex-1">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <i className="bi bi-search text-gray-400 text-lg"></i>
-                </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Search by train name, number, or station..."
-                  className="w-full pl-12 pr-4 py-3.5 glass-card border border-slate-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white placeholder-gray-500 transition-all"
+                  className="w-full pl-4 pr-4 py-3.5 glass-card border border-slate-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white placeholder-gray-500 transition-all"
                 />
                 {searchQuery && (
                   <button
