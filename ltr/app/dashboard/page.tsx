@@ -113,8 +113,11 @@ export default function DashboardPage() {
   const fetchRerouteData = async (trainList: Train[]) => {
     const token = localStorage.getItem('token');
     const delayedTrains = trainList.filter(
-      (t) => t.status === 'cancelled' || t.delayMinutes > 0
+      (t) => t.status === 'cancelled' || t.delayMinutes >= 15
     );
+
+    console.log('All trains:', trainList.map(t => ({ name: t.trainName, status: t.status, delay: t.delayMinutes })));
+    console.log('Fetching reroutes for:', delayedTrains.map(t => ({ name: t.trainName, status: t.status, delay: t.delayMinutes })));
 
     const reroutePromises = delayedTrains.map(async (train) => {
       try {
@@ -123,6 +126,7 @@ export default function DashboardPage() {
         });
         if (res.ok) {
           const data = await res.json();
+          console.log(`Reroute data for ${train.trainName} (status: ${train.status}):`, data);
           return { trainId: train._id, data };
         }
       } catch (error) {

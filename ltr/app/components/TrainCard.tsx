@@ -246,7 +246,9 @@ export default function TrainCard({
             </div>
             
             <div className="flex items-center gap-2">
-              {train.delayMinutes > 0 ? (
+              {train.status === 'cancelled' ? (
+                <span className="text-red-400 font-semibold text-sm">Cancelled</span>
+              ) : train.delayMinutes > 0 ? (
                 <>
                   <span className="text-orange-400 font-semibold text-sm">Delayed</span>
                   <div className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/30 rounded-lg">
@@ -275,19 +277,35 @@ export default function TrainCard({
         {rerouteData && rerouteData.rerouteRequired && (
           <div className="mt-4 pt-4 border-t border-slate-700/50">
             <div className="flex items-start gap-3">
-              <i className="bi bi-exclamation-triangle-fill text-orange-400 text-lg mt-0.5"></i>
+              <i className={`text-lg mt-0.5 ${
+                train.status === 'cancelled' 
+                  ? 'bi bi-x-circle-fill text-red-400' 
+                  : 'bi bi-exclamation-triangle-fill text-orange-400'
+              }`}></i>
               <div className="flex-1">
-                <p className="text-sm text-orange-400 font-semibold mb-2">Alternative trains available</p>
-                {(rerouteData.sameStationAlternatives?.length > 0 || rerouteData.nearbyStationAlternatives?.length > 0) && (
-                  <div className="flex gap-2 flex-wrap">
-                    {(rerouteData.sameStationAlternatives || rerouteData.nearbyStationAlternatives || []).slice(0, 2).map((alt: any) => (
-                      <div key={alt.trainId} className="inline-flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs">
-                        <span className="font-medium text-white">{alt.trainName}</span>
-                        <span className="text-gray-600">•</span>
-                        <span className="text-gray-400">Platform {alt.platform}</span>
-                      </div>
-                    ))}
-                  </div>
+                {train.status === 'cancelled' ? (
+                  <>
+                    <p className="text-sm text-red-400 font-semibold mb-1">⚠️ Train Cancelled</p>
+                    <p className="text-xs text-gray-400 mb-2">This train has been cancelled by the station.</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-orange-400 font-semibold mb-2">Train Delayed by {train.delayMinutes} minutes</p>
+                )}
+                {(rerouteData.sameStationAlternatives?.length > 0 || rerouteData.nearbyStationAlternatives?.length > 0) ? (
+                  <>
+                    <p className="text-xs text-emerald-400 font-medium mb-2">Alternative trains available:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {(rerouteData.sameStationAlternatives || rerouteData.nearbyStationAlternatives || []).slice(0, 2).map((alt: any) => (
+                        <div key={alt.trainId} className="inline-flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs">
+                          <span className="font-medium text-white">{alt.trainName}</span>
+                          <span className="text-gray-600">•</span>
+                          <span className="text-gray-400">Platform {alt.platform}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400">No suitable alternatives found. Check nearby stations.</p>
                 )}
               </div>
             </div>
@@ -363,6 +381,8 @@ export default function TrainCard({
                       )}
                     </div>
                   </>
+                ) : train.status === 'cancelled' ? (
+                  <span className="text-red-400 font-semibold">Cancelled</span>
                 ) : train.delayMinutes > 0 ? (
                   <span className="text-orange-400 font-semibold">+{train.delayMinutes}m delay</span>
                 ) : (
@@ -388,7 +408,9 @@ export default function TrainCard({
               {train.destination || train.stationName}
             </p>
             <div className="flex items-center gap-3">
-              {train.delayMinutes > 0 ? (
+              {train.status === 'cancelled' ? (
+                <span className="text-red-400 font-semibold">Cancelled</span>
+              ) : train.delayMinutes > 0 ? (
                 <span className="text-orange-400 font-semibold">Delayed by {train.delayMinutes}mins</span>
               ) : (
                 <span className="text-emerald-400 font-semibold">On Time</span>
@@ -445,41 +467,58 @@ export default function TrainCard({
 
       {/* Reroute Information */}
       {rerouteData && rerouteData.rerouteRequired && (
-        <div className="mt-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl">
-          <p className="text-sm text-orange-400 font-semibold mb-3 flex items-center gap-2">
-            <i className="bi bi-exclamation-triangle-fill"></i>
-            Alternative trains available
-          </p>
+        <div className={`mt-4 p-4 rounded-xl ${
+          train.status === 'cancelled'
+            ? 'bg-red-500/10 border border-red-500/30'
+            : 'bg-orange-500/10 border border-orange-500/30'
+        }`}>
+          {train.status === 'cancelled' ? (
+            <>
+              <p className="text-sm text-red-400 font-semibold mb-2 flex items-center gap-2">
+                <i className="bi bi-x-circle-fill"></i>
+                ⚠️ Train Cancelled
+              </p>
+              <p className="text-xs text-gray-400 mb-3">This train has been cancelled by the station.</p>
+            </>
+          ) : (
+            <p className="text-sm text-orange-400 font-semibold mb-3 flex items-center gap-2">
+              <i className="bi bi-exclamation-triangle-fill"></i>
+              Train Delayed by {train.delayMinutes} minutes
+            </p>
+          )}
           {(rerouteData.sameStationAlternatives?.length > 0 || rerouteData.nearbyStationAlternatives?.length > 0) ? (
-            <div className="space-y-2">
-              {[...(rerouteData.sameStationAlternatives || []), ...(rerouteData.nearbyStationAlternatives || [])].slice(0, 3).map((alt: any) => (
-                <div key={alt.trainId} className="bg-slate-800/70 p-3 rounded-lg border border-emerald-500/30 hover:border-emerald-500/50 transition-all">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="text-sm font-bold text-white">{alt.trainName}</p>
-                      <p className="text-xs text-gray-400">Train #{alt.trainNumber}</p>
+            <>
+              <p className="text-xs text-emerald-400 font-semibold mb-3">Alternative trains available:</p>
+              <div className="space-y-2">
+                {[...(rerouteData.sameStationAlternatives || []), ...(rerouteData.nearbyStationAlternatives || [])].slice(0, 3).map((alt: any) => (
+                  <div key={alt.trainId} className="bg-slate-800/70 p-3 rounded-lg border border-emerald-500/30 hover:border-emerald-500/50 transition-all">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-sm font-bold text-white">{alt.trainName}</p>
+                        <p className="text-xs text-gray-400">Train #{alt.trainNumber}</p>
+                      </div>
+                      <StatusBadge status={alt.status} delayMinutes={alt.delayMinutes} />
                     </div>
-                    <StatusBadge status={alt.status} delayMinutes={alt.delayMinutes} />
+                    <div className="flex items-center gap-3 text-xs text-gray-300">
+                      <span className="flex items-center gap-1">
+                        <i className="bi bi-geo-alt-fill text-emerald-400"></i>
+                        {alt.stationName}
+                      </span>
+                      <span className="text-gray-600">•</span>
+                      <span className="flex items-center gap-1">
+                        <i className="bi bi-signpost text-emerald-400"></i>
+                        Platform {alt.platform}
+                      </span>
+                      <span className="text-gray-600">•</span>
+                      <span className="flex items-center gap-1">
+                        <i className="bi bi-clock text-emerald-400"></i>
+                        {formatTime(alt.departureTime)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-300">
-                    <span className="flex items-center gap-1">
-                      <i className="bi bi-geo-alt-fill text-emerald-400"></i>
-                      {alt.stationName}
-                    </span>
-                    <span className="text-gray-600">•</span>
-                    <span className="flex items-center gap-1">
-                      <i className="bi bi-signpost text-emerald-400"></i>
-                      Platform {alt.platform}
-                    </span>
-                    <span className="text-gray-600">•</span>
-                    <span className="flex items-center gap-1">
-                      <i className="bi bi-clock text-emerald-400"></i>
-                      {formatTime(alt.departureTime)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-xs text-gray-400">No suitable alternatives found. Check nearby stations.</p>
           )}
