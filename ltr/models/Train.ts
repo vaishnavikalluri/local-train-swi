@@ -11,6 +11,7 @@ export interface ITrain extends Document {
   source: string;
   destination: string;
   stationName: string;
+  city?: string; // City where the station is located
   createdBy: mongoose.Types.ObjectId; // Station manager who created this
   createdAt: Date;
   updatedAt: Date;
@@ -64,6 +65,10 @@ const TrainSchema: Schema = new Schema(
     stationName: {
       type: String,
       required: [true, 'Station name is required'],
+      trim: true,
+    },
+    city: {
+      type: String,
       trim: true,
     },
     createdBy: {

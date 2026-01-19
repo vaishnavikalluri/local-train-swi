@@ -12,6 +12,7 @@ export default function CreateStationManagerPage() {
     email: '',
     password: '',
     stationName: '',
+    city: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,6 +128,20 @@ export default function CreateStationManagerPage() {
                 onChange={(e) => setFormData({ ...formData, stationName: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white placeholder-gray-400"
                 placeholder="Mumbai Central"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                City
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md focus:outline-none focus:ring-0 text-white placeholder-gray-400"
+                placeholder="Mumbai"
               />
             </div>
 

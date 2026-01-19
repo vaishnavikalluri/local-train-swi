@@ -1,9 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose, { Mongoose } from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ltr-system';
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
+}
+
+declare global {
+  var mongoose: {
+    conn: Mongoose | null;
+    promise: Promise<Mongoose> | null;
+  };
 }
 
 let cached = global.mongoose;

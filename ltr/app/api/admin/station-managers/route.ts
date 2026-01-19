@@ -66,12 +66,12 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
     
-    const { email, password, name, stationName } = await request.json();
+    const { email, password, name, stationName, city } = await request.json();
 
     // Validate required fields
-    if (!email || !password || !name || !stationName) {
+    if (!email || !password || !name || !stationName || !city) {
       return NextResponse.json(
-        { error: 'Email, password, name, and station name are required' },
+        { error: 'Email, password, name, station name, and city are required' },
         { status: 400 }
       );
     }
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
       name,
       role: 'station_manager',
       stationName,
+      city,
     });
 
     // Return without password

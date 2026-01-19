@@ -6,6 +6,7 @@ export interface IUser extends Document {
   name: string;
   role: 'super_admin' | 'station_manager' | 'user';
   stationName?: string; // For station managers
+  city?: string; // City for station managers
   favorites?: mongoose.Types.ObjectId[]; // Favorite trains for regular users
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +37,10 @@ const UserSchema: Schema = new Schema(
       default: 'user',
     },
     stationName: {
+      type: String,
+      trim: true,
+    },
+    city: {
       type: String,
       trim: true,
     },
