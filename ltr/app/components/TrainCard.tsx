@@ -8,6 +8,7 @@ interface Train {
   trainNumber: string;
   trainName: string;
   stationName: string;
+  city?: string;
   platform: string;
   status: string;
   delayMinutes: number;
@@ -193,6 +194,15 @@ export default function TrainCard({
                   <i className="bi bi-geo-alt text-xs"></i>
                   {train.stationName}
                 </span>
+                {train.city && (
+                  <>
+                    <span className="text-gray-600">•</span>
+                    <span className="flex items-center gap-1">
+                      <i className="bi bi-building text-xs"></i>
+                      {train.city}
+                    </span>
+                  </>
+                )}
                 <span className="text-gray-600">•</span>
                 <span className="flex items-center gap-1">
                   <i className="bi bi-signpost text-xs"></i>
@@ -408,7 +418,18 @@ export default function TrainCard({
       <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
         <div>
           <h4 className="text-lg font-bold text-white">{train.trainName}</h4>
-          <p className="text-sm text-gray-400">Train #{train.trainNumber}</p>
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span>Train #{train.trainNumber}</span>
+            {train.city && (
+              <>
+                <span className="text-gray-600">•</span>
+                <span className="flex items-center gap-1">
+                  <i className="bi bi-building text-xs"></i>
+                  {train.city}
+                </span>
+              </>
+            )}
+          </div>
         </div>
         {showFavorite && (
           <button

@@ -24,15 +24,22 @@ export async function GET(request: NextRequest) {
     }
 
     const trains = await Train.find(query)
-      .populate('createdBy', 'name email')
+      .populate('createdBy', 'name email city')
       .sort({ departureTime: 1 });
 
-    // Transform to include creator name
+    // Transform to include creator name and auto-populate city if missing
     const trainsWithCreator = trains.map(train => {
       const trainObj = train.toObject();
+      const createdBy = trainObj.createdBy as any;
+      
+      // If train doesn't have city but creator has city, use creator's city
+      if (!trainObj.city && createdBy && createdBy.city) {
+        trainObj.city = createdBy.city;
+      }
+      
       return {
         ...trainObj,
-        createdByName: trainObj.createdBy ? (trainObj.createdBy as any).name : 'Unknown'
+        createdByName: createdBy ? createdBy.name : 'Unknown'
       };
     });
 
@@ -97,6 +104,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get city from station manager's profile
+    const stationManager = await User.findById(auth.userId).select('city');
+    const city = stationManager?.city || undefined;
+
     // Check if train number already exists
     const existingTrain = await Train.findOne({ trainNumber });
     
@@ -119,6 +130,7 @@ export async function POST(request: NextRequest) {
       source,
       destination,
       stationName,
+      city,
       createdBy: auth.userId,
     });
 

@@ -12,6 +12,7 @@ interface Train {
   trainNumber: string;
   trainName: string;
   stationName: string;
+  city?: string;
   platform: string;
   status: string;
   delayMinutes: number;
@@ -27,8 +28,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const [trains, setTrains] = useState<Train[]>([]);
   const [filteredTrains, setFilteredTrains] = useState<Train[]>([]);
-  const [stations, setStations] = useState<string[]>([]);
+  const [stations, setStations] = useState<{ name: string; city: string }[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
   const [selectedStation, setSelectedStation] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
   const [loading, setLoading] = useState(true);
   const [rerouteData, setRerouteData] = useState<Record<string, any>>({});
   const [userName, setUserName] = useState('');
@@ -94,6 +97,9 @@ export default function DashboardPage() {
 
       // Use stations from the stations API endpoint
       setStations(stationsData.stations || []);
+      
+      // Set available cities from the stations API
+      setCities(stationsData.cities || []);
 
       // Fetch reroute data for delayed/cancelled trains
       fetchRerouteData(trainsWithFavorites);
@@ -138,16 +144,28 @@ export default function DashboardPage() {
 
   const handleStationFilter = (station: string) => {
     setSelectedStation(station);
-    applyFilters(station, searchQuery);
+    applyFilters(station, selectedCity, searchQuery);
+  };
+
+  const handleCityFilter = (city: string) => {
+    setSelectedCity(city);
+    // Reset station filter when city changes
+    setSelectedStation('all');
+    applyFilters('all', city, searchQuery);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    applyFilters(selectedStation, query);
+    applyFilters(selectedStation, selectedCity, query);
   };
 
-  const applyFilters = (station: string, search: string) => {
+  const applyFilters = (station: string, city: string, search: string) => {
     let filtered = trains;
+
+    // Apply city filter first
+    if (city !== 'all') {
+      filtered = filtered.filter((t) => t.city === city);
+    }
 
     // Apply station filter
     if (station !== 'all') {
@@ -309,23 +327,46 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* City Filter */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-gray-300 whitespace-nowrap flex items-center gap-1.5">
+                <i className="bi bi-geo-alt"></i>
+                City:
+              </label>
+              <select
+                value={selectedCity}
+                onChange={(e) => handleCityFilter(e.target.value)}
+                className="px-4 py-3.5 glass-card border border-slate-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white min-w-[180px]"
+              >
+                <option value="all" className="bg-slate-800">All Cities</option>
+                {cities.map((city) => (
+                  <option key={city} value={city} className="bg-slate-800">
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Station Filter */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-semibold text-gray-300 whitespace-nowrap flex items-center gap-1.5">
                 <i className="bi bi-funnel"></i>
-                Filter:
+                Station:
               </label>
               <select
                 value={selectedStation}
                 onChange={(e) => handleStationFilter(e.target.value)}
                 className="px-4 py-3.5 glass-card border border-slate-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white min-w-[180px]"
+                disabled={selectedCity !== 'all'}
               >
                 <option value="all" className="bg-slate-800">All Stations</option>
-                {stations.map((station) => (
-                  <option key={station} value={station} className="bg-slate-800">
-                    {station}
-                  </option>
-                ))}
+                {stations
+                  .filter(station => selectedCity === 'all' || station.city === selectedCity)
+                  .map((station) => (
+                    <option key={station.name} value={station.name} className="bg-slate-800">
+                      {station.name} {station.city && `(${station.city})`}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
@@ -338,7 +379,7 @@ export default function DashboardPage() {
               <i className="bi bi-train-front text-blue-500"></i>
               Live Train Updates
             </h2>
-            {(searchQuery || selectedStation !== 'all') && (
+            {(searchQuery || selectedStation !== 'all' || selectedCity !== 'all') && (
               <p className="text-sm text-gray-400 mt-1 flex items-center gap-1.5">
                 <i className="bi bi-check-circle text-blue-400"></i>
                 Showing {filteredTrains.length} of {trains.length} trains

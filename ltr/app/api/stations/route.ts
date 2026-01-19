@@ -3,25 +3,41 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 
 // Get all unique station names (Public endpoint)
+// Supports optional city filter via query parameter
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
     
-    // Get all station managers and extract their station names
-    const stationManagers = await User.find({ role: 'station_manager' }).select('stationName');
+    // Get city filter from query parameters
+    const { searchParams } = new URL(request.url);
+    const cityFilter = searchParams.get('city');
     
-    // Extract unique station names
+    // Build query based on city filter
+    const query: any = { role: 'station_manager' };
+    if (cityFilter) {
+      query.city = cityFilter;
+    }
+    
+    // Get station managers filtered by city if provided
+    const stationManagers = await User.find(query).select('stationName city');
+    
+    // Extract station information with city
     const stations = stationManagers
-      .map(manager => manager.stationName)
-      .filter(Boolean); // Remove null/undefined values
+      .filter(manager => manager.stationName) // Remove null/undefined values
+      .map(manager => ({
+        name: manager.stationName,
+        city: manager.city
+      }));
     
-    // Return unique stations sorted alphabetically
-    const uniqueStations = Array.from(new Set(stations)).sort();
-
+    // Get unique cities for filtering
+    const uniqueCities = Array.from(new Set(stationManagers.map(m => m.city).filter(Boolean))).sort();
+    
+    // Return stations and cities
     return NextResponse.json({
       success: true,
-      count: uniqueStations.length,
-      stations: uniqueStations,
+      count: stations.length,
+      stations: stations,
+      cities: uniqueCities,
     });
   } catch (error) {
     console.error('Get stations error:', error);
